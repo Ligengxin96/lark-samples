@@ -1,4 +1,7 @@
 import * as Lark from '@larksuiteoapi/node-sdk';
+import dotenv from 'dotenv';
+import { chat } from './deepseek.js';
+dotenv.config();
 
 /**
  * 配置应用基础信息和请求域名。
@@ -45,6 +48,7 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
     try {
       if (message_type === 'text') {
         responseText = JSON.parse(content).text;
+        responseText = await chat(responseText);
       } else {
         responseText = '解析消息失败，请发送文本消息 \nparse message failed, please send text message';
       }
@@ -64,7 +68,7 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
         },
         data: {
           receive_id: chat_id, // 消息接收者的 ID 为消息发送的会话ID。 ID of the message receiver is the chat ID of the message sending.
-          content: JSON.stringify({ text: `收到你发送的消息:${responseText}\nReceived message: ${responseText}` }),
+          content: JSON.stringify({ text: responseText }),
           msg_type: 'text', // 设置消息类型为文本消息。 Set message type to text message.
         },
       });
@@ -78,7 +82,7 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
           message_id: data.message.message_id, // 要回复的消息 ID。 Message ID to reply.
         },
         data: {
-          content: JSON.stringify({ text: `收到你发送的消息:${responseText}\nReceived message: ${responseText}` }),
+          content: JSON.stringify({ text: responseText }),
           msg_type: 'text', // 设置消息类型为文本消息。 Set message type to text message.
         },
       });
@@ -91,3 +95,4 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
  * Start long connection and register event handler.
  */
 wsClient.start({ eventDispatcher });
+

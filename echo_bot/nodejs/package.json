@@ -9,6 +9,8 @@
     "dev": "node index.js"
   },
   "dependencies": {
-    "@larksuiteoapi/node-sdk": "^1.40.0"
+    "@larksuiteoapi/node-sdk": "^1.40.0",
+    "dotenv": "^16.4.7",
+    "openai": "^4.85.0"
   }
 }
