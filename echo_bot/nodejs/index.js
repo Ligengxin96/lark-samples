@@ -1,6 +1,7 @@
 import * as Lark from '@larksuiteoapi/node-sdk';
 import dotenv from 'dotenv';
 import { chat } from './deepseek.js';
+import { redisClient } from './redis.js';
 dotenv.config();
 
 /**
@@ -35,16 +36,22 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
    */
   'im.message.receive_v1': async (data) => {
     const {
-      message: { chat_id, content, message_type, chat_type },
+      message: { chat_id, content, message_type, chat_type, message_id },
     } = data;
 
+    const isOk = await redisClient.set(`message_id:${message_id}`, data.message, 'EX', 60 * 60 * 24, 'NX');
+    if (!isOk) {
+      console.log(`消息已处理, message_id=${message_id}`);
+      return;
+    }
+
+    console.log(`接受到新消息, message_id=${message_id}, chat_id: ${chat_id}, content: ${content},  chat_type: ${chat_type}, message_type: ${message_type}`);
     /**
      * 解析用户发送的消息。
      * Parse the message sent by the user.
      */
 
     let responseText = '';
-
     try {
       if (message_type === 'text') {
         responseText = JSON.parse(content).text;
