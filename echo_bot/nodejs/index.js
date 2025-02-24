@@ -52,16 +52,23 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
      */
 
     let responseText = '';
+    const isConcurrencyOk = await redisClient.set(`chat_id:${chat_id}`, 1, 'EX', 60 * 10, 'NX');
     try {
-      if (message_type === 'text') {
-        responseText = JSON.parse(content).text;
-        responseText = await chat(responseText);
+      if (!isConcurrencyOk) {
+        responseText = `正在思考回答上个问题, 请稍后再试`;
       } else {
-        responseText = '解析消息失败，请发送文本消息 \nparse message failed, please send text message';
+        if (message_type === 'text') {
+          responseText = JSON.parse(content).text;
+          responseText = await chat(responseText, chat_id);
+        } else {
+          responseText = '解析消息失败，请发送文本消息 \nparse message failed, please send text message';
+        }
       }
     } catch (error) {
       // 解析消息失败，返回错误信息。 Parse message failed, return error message.
       responseText = '解析消息失败，请发送文本消息 \nparse message failed, please send text message';
+    } finally {
+      await redisClient.del(`chat_id:${chat_id}`);
     }
 
     if (chat_type === 'p2p') {
