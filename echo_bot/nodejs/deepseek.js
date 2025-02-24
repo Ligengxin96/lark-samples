@@ -23,13 +23,17 @@ const chat = async (content, chatId) => {
       messages,
     });
     console.log(`Deepseek response: ${JSON.stringify(completion)}`);
+    let result = completion.choices[0].message.content;
+    if (result.startsWith('\n\n')) {
+      result = result.slice(2);
+    }
     messages.push({
       "role": "assistant",
-      "content": completion.choices[0].message.content
+      "content": result
     });
 
     await redisClient.set(redisKey, JSON.stringify(messages), 'EX', 60 * 60 * 24);
-    return completion.choices[0].message.content;
+    return result;
   } catch (error) {
     console.error(`Deepseek error: ${error}`);
     return `Deepseek error: ${error}`;
