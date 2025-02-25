@@ -19,7 +19,7 @@ const chat = async (content, chatId) => {
     });
     messages = messages.slice(-10);
     const completion = await client.chat.completions.create({
-      model: "deepseek-r1",
+      model: "deepseek-chat",
       messages,
     });
     console.log(`Deepseek response: ${JSON.stringify(completion)}`);
