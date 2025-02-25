@@ -4,7 +4,7 @@ import { redisClient } from './redis.js';
 dotenv.config();
 
 const client = new OpenAI({
-  baseURL: 'https://api.lkeap.cloud.tencent.com/v1',
+  baseURL: 'https://api.deepseek.com',
   apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
