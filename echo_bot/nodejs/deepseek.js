@@ -8,6 +8,11 @@ const client = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
+const tencentClient = new OpenAI({
+  baseURL: 'https://api.lkeap.cloud.tencent.com/v1',
+  apiKey: process.env.TENCENT_DEEPSEEK_API_KEY,
+});
+
 const SYSTEM_MESSAGE = {
   "role": "system",
   "content": "你现在是一位选矿专家,精通选矿工艺,选矿设备,矿石性质,矿石分析,矿石加工等领域,你需要专业的回答我问你的问题。"
@@ -35,10 +40,24 @@ const chat = async (content, chatId) => {
       });
     }
     messages = [SYSTEM_MESSAGE, ...messages.slice(-9)];
-    const completion = await client.chat.completions.create({
-      model: "deepseek-reasoner",
-      messages,
-    });
+    let completion;
+    try {
+      completion = await client.chat.completions.create({
+        model: "deepseek-reasoner",
+        messages,
+      });
+    } catch (error) {
+      console.error(`Deepseek error: ${error}.`);
+      try {
+        completion = await tencentClient.chat.completions.create({
+          model: "deepseek-r1",
+          messages,
+        });
+      } catch (e) {
+        console.error(`Tencent deepseek error: ${e}.`);
+        throw error;
+      }
+    }
     console.log(`Deepseek response: ${JSON.stringify(completion)}`);
     let result = completion.choices[0].message.content;
     if (result.startsWith('\n\n')) {
@@ -54,7 +73,7 @@ const chat = async (content, chatId) => {
   } catch (error) {
     console.error(`Deepseek error: ${error}.`);
     console.debug(error.stack);
-    return Math.round() > 0.5 ? `Deepssek 错误,未回复任何信息` : `抱歉，我无法理解您的问题。`;
+    return `Deepssek 错误, 未回复任何信息`;
   }
 }
 
