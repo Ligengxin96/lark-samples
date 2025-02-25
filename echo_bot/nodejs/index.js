@@ -58,6 +58,28 @@ const eventDispatcher = new Lark.EventDispatcher({}).register({
         responseText = `正在思考回答上个问题, 请稍后再试`;
       } else {
         if (message_type === 'text') {
+          if (chat_type === 'p2p') {
+            await client.im.v1.message.create({
+              params: {
+                receive_id_type: 'chat_id', // 消息接收者的 ID 类型，设置为会话ID。 ID type of the message receiver, set to chat ID.
+              },
+              data: {
+                receive_id: chat_id, // 消息接收者的 ID 为消息发送的会话ID。 ID of the message receiver is the chat ID of the message sending.
+                content: JSON.stringify({ text: '已经收到你的消息,正在思考,请稍等...' }),
+                msg_type: 'text', // 设置消息类型为文本消息。 Set message type to text message.
+              },
+            });
+          } else {
+            await client.im.v1.message.reply({
+              path: {
+                message_id: data.message.message_id, // 要回复的消息 ID。 Message ID to reply.
+              },
+              data: {
+                content: JSON.stringify({ text: '已经收到你的消息,正在思考,请稍等...' }),
+                msg_type: 'text', // 设置消息类型为文本消息。 Set message type to text message.
+              },
+            });
+          }
           responseText = JSON.parse(content).text;
           responseText = await chat(responseText, chat_id);
         } else {
